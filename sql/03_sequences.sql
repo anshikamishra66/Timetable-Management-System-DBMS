@@ -1,0 +1,112 @@
+-- ============================================
+-- TIMETABLE MANAGEMENT SYSTEM
+-- File 03: Sequences
+-- ============================================
+
+-- 1. Department ID Sequence
+CREATE SEQUENCE seq_dept
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 9999
+NOCACHE
+NOCYCLE;
+
+-- 2. Teacher ID Sequence
+CREATE SEQUENCE seq_teacher
+START WITH 101
+INCREMENT BY 1
+MINVALUE 101
+MAXVALUE 9999
+NOCACHE
+NOCYCLE;
+
+-- 3. Subject ID Sequence
+CREATE SEQUENCE seq_subject
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 9999
+NOCACHE
+NOCYCLE;
+
+-- 4. Classroom ID Sequence
+CREATE SEQUENCE seq_classroom
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 9999
+NOCACHE
+NOCYCLE;
+
+-- 5. Time Slot ID Sequence
+CREATE SEQUENCE seq_slot
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 9999
+NOCACHE
+NOCYCLE;
+
+-- 6. Timetable ID Sequence
+CREATE SEQUENCE seq_timetable
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 99999
+NOCACHE
+NOCYCLE;
+
+-- 7. Student ID Sequence
+CREATE SEQUENCE seq_student
+START WITH 1001
+INCREMENT BY 1
+MINVALUE 1001
+MAXVALUE 99999
+NOCACHE
+NOCYCLE;
+
+-- 8. Attendance ID Sequence
+CREATE SEQUENCE seq_attendance
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 999999
+NOCACHE
+NOCYCLE;
+
+-- 9. Teacher Subject Mapping ID Sequence
+CREATE SEQUENCE seq_mapping
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 9999
+NOCACHE
+NOCYCLE;
+
+-- 10. Holiday ID Sequence
+CREATE SEQUENCE seq_holiday
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 9999
+NOCACHE
+NOCYCLE;
+
+-- 11. Audit Log ID Sequence (for triggers later)
+CREATE SEQUENCE seq_audit
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 999999
+NOCACHE
+NOCYCLE;
+
+-- ============================================
+-- HOW TO USE SEQUENCES
+-- Example: INSERT INTO Department VALUES
+-- (seq_dept.NEXTVAL, 'Computer Science', 'Dr. Ramesh');
+-- ============================================
+
+-- END OF FILE 03
+-- ============================================
