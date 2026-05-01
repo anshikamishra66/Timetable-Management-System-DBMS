@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in | NMIT Timetable</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background:
+                linear-gradient(rgba(30, 144, 255, 0.88), rgba(56, 189, 248, 0.86)),
+                repeating-linear-gradient(
+                    125deg,
+                    rgba(255,255,255,0.08) 0px,
+                    rgba(255,255,255,0.08) 2px,
+                    transparent 2px,
+                    transparent 14px
+                );
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            padding: 0;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 1920px;
+            display: grid;
+            grid-template-columns: 1fr 620px 1fr;
+            min-height: 100vh;
+        }
+
+        .side {
+            background: transparent;
+        }
+
+        .center {
+            background: #fff;
+            padding: 28px 58px 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-wrap {
+            text-align: center;
+            margin-bottom: 26px;
+        }
+
+        .logo-mark {
+            width: 88px;
+            height: 88px;
+            margin: 0 auto 10px;
+            border: 5px solid #2f3ba7;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2f3ba7;
+            font-size: 40px;
+            font-weight: 800;
+        }
+
+        .logo-title {
+            color: #2f3ba7;
+            font-size: 74px;
+            font-weight: 800;
+            line-height: 0.95;
+            letter-spacing: 1px;
+        }
+
+        .logo-sub {
+            margin-top: 6px;
+            color: #4f46e5;
+            font-size: 18px;
+        }
+
+        .logo-tag {
+            margin-top: 6px;
+            color: #4b5563;
+            font-size: 16px;
+            font-style: italic;
+        }
+
+        .field {
+            width: 100%;
+            height: 56px;
+            border: 1px solid #94a3b8;
+            border-radius: 14px;
+            padding: 0 20px;
+            font-size: 20px;
+            margin-bottom: 18px;
+            background: #f8fbff;
+            color: #111827;
+        }
+
+        .field::placeholder {
+            color: #64748b;
+        }
+
+        .login-row {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            margin-top: 4px;
+        }
+
+        .login-btn {
+            background: #1565c0;
+            color: #fff;
+            text-decoration: none;
+            padding: 14px 24px;
+            border-radius: 14px;
+            font-size: 22px;
+            font-weight: 400;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .divider {
+            border-top: 1px solid #d7dde6;
+            margin: 34px 0;
+        }
+
+        h2 {
+            font-size: 23px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 18px;
+        }
+
+        .flash {
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .flash.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .flash.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .note {
+            margin-top: 18px;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .credential-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .credential-card {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 16px;
+            padding: 18px 20px;
+            color: #1e3a8a;
+        }
+
+        .credential-card strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 16px;
+        }
+
+        .credential-card small {
+            display: block;
+            margin-bottom: 10px;
+            color: #475569;
+        }
+
+        @media (max-width: 1100px) {
+            .page {
+                grid-template-columns: 1fr;
+            }
+
+            .side {
+                display: none;
+            }
+
+            .center {
+                padding: 24px;
+            }
+
+            .logo-title {
+                font-size: 54px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .credential-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="side"></div>
+
+        <main class="center">
+            <div class="logo-wrap">
+                <div class="logo-mark">N</div>
+                <div class="logo-title">NITTE</div>
+                <div class="logo-sub">(Deemed to be University)</div>
+                <div class="logo-tag">Where there is space for every dream</div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="flash {{ 'error' if category == 'error' else 'success' }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <h2>Login</h2>
+            <form method="POST">
+                <input class="field" type="text" name="username" placeholder="Enter USN or admin" required>
+                <input class="field" type="password" name="password" placeholder="Students: last 3 digits of USN" required>
+
+                <div class="login-row">
+                    <button class="login-btn" type="submit">Log in</button>
+                </div>
+            </form>
+
+            <div class="divider"></div>
+
+            <div class="credential-grid">
+                <div class="credential-card">
+                    <strong>Student Login</strong>
+                    <small>For the personal student portal and attendance tracking.</small>
+                    <div>Username / USN: <b>1NT24AD009</b></div>
+                    <div>Password: last 3 digits, so for this USN it is <b>009</b></div>
+                </div>
+
+                <div class="credential-card">
+                    <strong>Admin Login</strong>
+                    <small>For full Teachers, Students, Timetable, and Attendance management.</small>
+                    <div>Username: <b>admin</b></div>
+                    <div>Password: <b>admin123</b></div>
+                </div>
+
+                <div class="credential-card">
+                    <strong>Teacher Login</strong>
+                    <small>For AI attendance prediction, bulk attendance, lesson tracking, substitutes, and reminders.</small>
+                    <div>Username: <b>vadivel.r@nmit.ac.in</b></div>
+                    <div>Password: last 4 digits of contact, so here it is <b>6004</b></div>
+                </div>
+            </div>
+
+            <p class="note">
+                Student login opens the student portal for that USN. Students can view attendance only, while teachers and admin record it.
+            </p>
+        </main>
+
+        <div class="side"></div>
+    </div>
+</body>
+</html>

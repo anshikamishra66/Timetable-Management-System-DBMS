@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students | Timetable Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 28%),
+                linear-gradient(180deg, #08131a, #0f172a);
+            color: #f8fafc;
+            min-height: 100vh;
+            padding: 28px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .topbar p {
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        .topbar nav a {
+            color: #86efac;
+            text-decoration: none;
+            margin-left: 16px;
+            font-weight: 600;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 22px;
+            margin-bottom: 24px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #09111d;
+            color: #f8fafc;
+        }
+
+        button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #22c55e, #15803d);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1080px; }
+
+        th, td {
+            text-align: left;
+            padding: 13px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            vertical-align: top;
+        }
+
+        th {
+            color: #86efac;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        td {
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .profile-link {
+            color: #bbf7d0;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .profile-link:hover {
+            color: #4ade80;
+        }
+
+        .subtext {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .action-links a {
+            text-decoration: none;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+
+        .view-link { color: #7dd3fc; }
+        .delete-link { color: #fda4af; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div>
+            <h1>Students</h1>
+            <p>Click any student name to open the full profile and class timetable.</p>
+        </div>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/teachers">Teachers</a>
+            <a href="/timetable">Timetable</a>
+            <a href="/attendance">Attendance</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </div>
+
+    <section class="panel">
+        <h2 style="margin-bottom: 16px;">Add Student</h2>
+        <form method="POST" action="/students/add" class="form-grid">
+            <div>
+                <label for="student_name">Student Name</label>
+                <input id="student_name" name="student_name" required>
+            </div>
+            <div>
+                <label for="roll_no">USN / Roll Number</label>
+                <input id="roll_no" name="roll_no" required>
+            </div>
+            <div>
+                <label for="dept_id">Department</label>
+                <select id="dept_id" name="dept_id" required>
+                    {% for dept in departments %}
+                    <option value="{{ dept.dept_id }}">{{ dept.dept_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="semester">Semester</label>
+                <input id="semester" name="semester" type="number" required>
+            </div>
+            <div>
+                <label for="section">Section</label>
+                <input id="section" name="section" required>
+            </div>
+            <div>
+                <label for="admission_id">Admission ID</label>
+                <input id="admission_id" name="admission_id">
+            </div>
+            <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" required>
+            </div>
+            <div>
+                <button type="submit"><i class="fas fa-user-plus"></i> Add Student</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2 style="margin-bottom: 16px;">Student Directory</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Student</th>
+                        <th>USN</th>
+                        <th>Admission ID</th>
+                        <th>Department</th>
+                        <th>Semester</th>
+                        <th>Section</th>
+                        <th>Generated</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.student_id }}</td>
+                        <td>
+                            <a class="profile-link" href="/students/{{ student.student_id }}">{{ student.student_name }}</a>
+                            <span class="subtext">{{ student.email }}</span>
+                        </td>
+                        <td>{{ student.roll_no }}</td>
+                        <td>{{ student.admission_id or "-" }}</td>
+                        <td>{{ student.dept_name }}</td>
+                        <td>{{ student.semester }}</td>
+                        <td>{{ student.section }}</td>
+                        <td>
+                            {{ student.generate_date or "-" }}
+                            <span class="subtext">{{ student.generate_time or "" }}</span>
+                        </td>
+                        <td class="action-links">
+                            <a class="view-link" href="/students/{{ student.student_id }}">Profile</a>
+                            <a class="delete-link" href="/students/delete/{{ student.student_id }}">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</body>
+</html>

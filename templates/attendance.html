@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance | Timetable Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Base Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #f0fdf4, #ecfeff);
+            color: #134e4a;
+            min-height: 100vh;
+            padding: 28px;
+        }
+
+        /* Header / Navigation */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid rgba(15, 118, 110, 0.1);
+            padding-bottom: 16px;
+        }
+        .header h1 { font-size: 24px; }
+        .header nav a {
+            text-decoration: none;
+            color: #0f766e;
+            margin-left: 18px;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+        .header nav a:hover { color: #14b8a6; }
+
+        /* Panels */
+        .panel {
+            background: #ffffff;
+            border: 1px solid rgba(15, 118, 110, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+
+        /* Form Grid - Fixed Alignment */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            align-items: flex-end; /* Aligns inputs and buttons at the bottom */
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0f766e;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #0f172a;
+            font-size: 14px;
+            height: 42px; /* Uniform height */
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #0f766e;
+            background: #ffffff;
+            box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.2);
+        }
+        button {
+            height: 42px; /* Matches input height perfectly */
+            padding: 0 16px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #14b8a6, #0f766e);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            width: 100%;
+        }
+        button:hover { opacity: 0.9; }
+
+        /* Tables */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td {
+            text-align: left;
+            padding: 14px 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        th { color: #0f766e; font-size: 14px; font-weight: 600; background: #f8fafc; }
+        tr:hover td { background: #f8fafc; }
+        .percentage-pass { font-weight: 600; color: #166534; }
+        .percentage-fail { font-weight: 600; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Attendance Hub</h1>
+            <p style="color:#64748b; font-size: 14px; margin-top:4px;">
+                {% if teacher_mode %}
+                Mark attendance only for your assigned classes and review your class rosters.
+                {% else %}
+                Mark attendance and review class-wise presence data.
+                {% endif %}
+            </p>
+        </div>
+        <nav>
+            {% if teacher_mode %}
+            <a href="/teacher/workspace"><i class="fas fa-chalkboard-user"></i> Teacher Workspace</a>
+            {% else %}
+            <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="/teachers">Teachers</a>
+            <a href="/students">Students</a>
+            <a href="/timetable">Timetable</a>
+            {% endif %}
+            <a href="/logout" style="color: #991b1b;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <section class="panel">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert {{ 'alert-error' if category == 'error' else 'alert-success' }}">
+                    <i class="fas {{ 'fa-exclamation-circle' if category == 'error' else 'fa-check-circle' }}"></i> 
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h2 style="margin-bottom: 20px; font-size: 18px;">Mark Daily Attendance</h2>
+        
+        <form method="POST" action="/attendance/mark" class="form-grid">
+            <div class="form-group">
+                <label for="student_id">Select Student</label>
+                <select id="student_id" name="student_id" required>
+                    <option value="" disabled selected>-- Choose Student --</option>
+                    {% for student in students %}
+                    <option value="{{ student.student_id }}">{{ student.student_name }} (Roll: {{ student.roll_no }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="timetable_id">Select Class / Subject</label>
+                <select id="timetable_id" name="timetable_id" required>
+                    <option value="" disabled selected>-- Choose Class --</option>
+                    {% for row in timetable %}
+                    <option value="{{ row.timetable_id }}">
+                        {{ row.subject_name | default('Class ' ~ row.timetable_id) }}
+                        {% if row.day_name %} | {{ row.day_name }} {{ row.start_time }} - {{ row.end_time }}{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input id="date" name="date" type="date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" required>
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>&nbsp;</label> 
+                <button type="submit"><i class="fas fa-save"></i> Save Record</button>
+            </div>
+        </form>
+    </section>
+
+    {% if recent_attendance_records %}
+    <section class="panel">
+        <h2 style="margin-bottom: 20px; font-size: 18px;">Recently Saved Attendance</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Student</th>
+                        <th>Class</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Saved</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in recent_attendance_records %}
+                    <tr>
+                        <td>{{ row.attend_date }}</td>
+                        <td>
+                            <strong>{{ row.student_name }}</strong><br>
+                            <span style="color:#64748b;">{{ row.roll_no }}</span>
+                        </td>
+                        <td>{{ row.subject_name }}</td>
+                        <td>{{ row.day_name }} {{ row.start_time }} - {{ row.end_time }}</td>
+                        <td>
+                            <span class="{% if row.status == 'Present' %}percentage-pass{% else %}percentage-fail{% endif %}">
+                                {{ row.status }}
+                            </span>
+                        </td>
+                        <td>{{ row.updated_at or row.attend_date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="panel">
+        <h2 style="margin-bottom: 20px; font-size: 18px;">Attendance Summary Records</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Roll No</th>
+                        <th>Total Classes</th>
+                        <th>Classes Attended</th>
+                        <th>Current Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in attendance %}
+                    <tr>
+                        <td style="font-weight: 500;">{{ row.student_name }}</td>
+                        <td>{{ row.roll_no }}</td>
+                        <td>{{ row.total | default(0) }}</td>
+                        <td>{{ row.attended | default(0) }}</td>
+                        <td>
+                            <span class="{% if (row.percentage | default(0) | int) >= 75 %}percentage-pass{% else %}percentage-fail{% endif %}">
+                                {{ row.percentage | default(0) }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not attendance %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #64748b; padding: 24px;">No attendance records found.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const dateInput = document.getElementById('date');
+            if (dateInput) {
+                dateInput.valueAsDate = new Date(); // Automatically sets to today
+            }
+        });
+    </script>
+</body>
+</html>

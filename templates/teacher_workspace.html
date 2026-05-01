@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Intelligence Workspace</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-1: #06111b;
+            --bg-2: #101e31;
+            --panel: rgba(11, 21, 34, 0.86);
+            --panel-soft: rgba(255, 255, 255, 0.04);
+            --line: rgba(255, 255, 255, 0.08);
+            --text: #f8fafc;
+            --muted: #8fa2b8;
+            --cyan: #67e8f9;
+            --radius: 22px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            min-height: 100vh;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 24%),
+                radial-gradient(circle at top right, rgba(74, 222, 128, 0.14), transparent 28%),
+                linear-gradient(180deg, var(--bg-1), var(--bg-2));
+            padding: 24px;
+        }
+
+        a { color: inherit; }
+
+        .shell {
+            max-width: 1500px;
+            margin: 0 auto;
+            display: grid;
+            gap: 22px;
+        }
+
+        .topbar,
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.24);
+        }
+
+        .topbar {
+            padding: 22px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .title-wrap h1 {
+            font-size: 34px;
+            line-height: 1.05;
+            margin-bottom: 8px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(96, 165, 250, 0.12);
+            color: #bfdbfe;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            line-height: 1.6;
+            max-width: 760px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            padding: 11px 14px;
+            border-radius: 14px;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--line);
+            font-weight: 700;
+        }
+
+        .filters,
+        .stats,
+        .schedule-grid,
+        .hero-grid,
+        .analytics-grid,
+        .ops-grid,
+        .footer-grid,
+        .insight-grid,
+        .form-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .filters { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .filters .wide { grid-column: span 2; }
+        .stats { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+        .schedule-grid { grid-template-columns: 1.2fr 0.95fr; gap: 20px; }
+        .hero-grid { grid-template-columns: 1.25fr 0.95fr; gap: 20px; }
+        .analytics-grid { grid-template-columns: 1.35fr 0.95fr; gap: 20px; }
+        .ops-grid { grid-template-columns: 1.2fr 1fr; gap: 20px; }
+        .footer-grid { grid-template-columns: 1.05fr 0.95fr; gap: 20px; }
+        .insight-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+        .form-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+        .panel {
+            padding: 22px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .panel-title {
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .panel-copy {
+            color: var(--muted);
+            line-height: 1.55;
+            font-size: 14px;
+        }
+
+        .tag,
+        .risk-badge,
+        .priority-badge,
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .tag {
+            background: rgba(74, 222, 128, 0.12);
+            color: #bbf7d0;
+        }
+
+        .risk-high,
+        .priority-high {
+            background: rgba(251, 113, 133, 0.14);
+            color: #fecdd3;
+        }
+
+        .risk-medium,
+        .priority-medium {
+            background: rgba(251, 191, 36, 0.16);
+            color: #fde68a;
+        }
+
+        .risk-low,
+        .priority-low,
+        .status-good {
+            background: rgba(74, 222, 128, 0.14);
+            color: #bbf7d0;
+        }
+
+        .status-pending {
+            background: rgba(96, 165, 250, 0.14);
+            color: #bfdbfe;
+        }
+
+        .mini-card,
+        .entry-card,
+        .prediction-item,
+        .recommendation-item,
+        .timeline-item,
+        .activity-item,
+        .backup-item,
+        .stat-card {
+            padding: 16px;
+            border-radius: 18px;
+            background: var(--panel-soft);
+            border: 1px solid var(--line);
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            margin-top: 10px;
+        }
+
+        .stat-note,
+        .mini-card p,
+        .panel p,
+        .activity-item p,
+        .timeline-item p,
+        .backup-item p,
+        .prediction-item p,
+        .recommendation-item p {
+            color: var(--muted);
+            line-height: 1.55;
+            font-size: 14px;
+        }
+
+        .flash-stack,
+        .prediction-list,
+        .recommendation-list,
+        .timeline-list,
+        .activity-list,
+        .backup-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .flash {
+            padding: 14px 16px;
+            border-radius: 16px;
+            font-weight: 600;
+        }
+
+        .flash.error {
+            background: rgba(251, 113, 133, 0.12);
+            color: #fecdd3;
+        }
+
+        .flash.success {
+            background: rgba(74, 222, 128, 0.12);
+            color: #dcfce7;
+        }
+
+        label {
+            display: block;
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        input,
+        select,
+        textarea,
+        button {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: rgba(5, 12, 20, 0.85);
+            color: var(--text);
+            padding: 12px 14px;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 96px;
+            resize: vertical;
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 800;
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        }
+
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .button-row form { flex: 1 1 200px; }
+        .button-muted { background: linear-gradient(135deg, #0f766e, #14b8a6); }
+        .button-warn { background: linear-gradient(135deg, #b45309, #f59e0b); }
+        .span-2 { grid-column: span 2; }
+        .span-4 { grid-column: span 4; }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+        }
+
+        .entry-card strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .entry-card.active {
+            border-color: rgba(103, 232, 249, 0.45);
+            background: rgba(14, 165, 233, 0.1);
+            box-shadow: inset 0 0 0 1px rgba(103, 232, 249, 0.16);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th,
+        td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--line);
+            vertical-align: top;
+        }
+
+        th {
+            color: var(--cyan);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+        }
+
+        td { color: #e2e8f0; font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+        .muted { color: var(--muted); }
+        .small { font-size: 13px; }
+        .meta-row,
+        .pill-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .chart-box { min-height: 290px; padding: 8px 0 0; }
+
+        .empty {
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px dashed rgba(255, 255, 255, 0.14);
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .empty-cell {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .editor-note {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(103, 232, 249, 0.16);
+            background: rgba(103, 232, 249, 0.08);
+            color: #dbeafe;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .top-summary {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 1280px) {
+            .filters,
+            .stats,
+            .schedule-grid,
+            .hero-grid,
+            .analytics-grid,
+            .ops-grid,
+            .footer-grid,
+            .insight-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            body { padding: 16px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .span-2, .span-4, .filters .wide { grid-column: span 1; }
+            .title-wrap h1 { font-size: 28px; }
+            .top-summary { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <header class="topbar">
+            <div class="title-wrap">
+                <div class="eyebrow">
+                    <i class="fas fa-brain"></i>
+                    Intelligent Academic Management System
+                </div>
+                <h1>Teacher Intelligence Workspace</h1>
+                <p class="subtitle">
+                    Advanced teacher-side control room with AI attendance prediction, engagement analytics,
+                    smart recommendations, lesson tracking, location-aware attendance capture, auto substitutes,
+                    reminder queues, audit logs, and backup controls.
+                </p>
+            </div>
+
+            <nav class="nav-links">
+                <a href="/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
+                {% if session.get('role') == 'admin' %}
+                <a href="/attendance"><i class="fas fa-clipboard-check"></i> Attendance</a>
+                <a href="/students"><i class="fas fa-user-graduate"></i> Students</a>
+                {% endif %}
+                <a href="/logout"><i class="fas fa-right-from-bracket"></i> Logout</a>
+            </nav>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                <div class="flash {{ 'error' if category == 'error' else 'success' }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">
+                        {% if teacher %}
+                            {{ teacher.teacher_name }}
+                        {% else %}
+                            Teacher profile not found
+                        {% endif %}
+                    </div>
+                    <p class="panel-copy">
+                        {% if teacher %}
+                            {{ teacher.dept_name }} teacher workspace with live class analytics and decision support.
+                        {% else %}
+                            Create or select a teacher account to enable the full workspace.
+                        {% endif %}
+                    </p>
+                </div>
+                {% if teacher %}
+                <div class="pill-row">
+                    <span class="tag"><i class="fas fa-envelope"></i> {{ teacher.email }}</span>
+                    <span class="status-badge {{ 'status-good' if teacher.availability_status == 'available' else 'status-pending' }}">
+                        <i class="fas fa-circle"></i> {{ teacher.availability_status or 'available' }}
+                    </span>
+                    {% if selected_class %}
+                    <span class="tag"><i class="fas fa-book-open"></i> {{ selected_class.subject_name }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <form method="GET" action="/teacher/workspace" class="filters">
+                {% if show_teacher_selector %}
+                <div>
+                    <label for="teacher_id">Teacher</label>
+                    <select id="teacher_id" name="teacher_id">
+                        {% for option in teacher_options %}
+                        <option value="{{ option.teacher_id }}" {% if teacher and option.teacher_id == teacher.teacher_id %}selected{% endif %}>
+                            {{ option.teacher_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="{{ 'wide' if not show_teacher_selector else '' }}">
+                    <label for="timetable_id">Active Class</label>
+                    <select id="timetable_id" name="timetable_id">
+                        {% if teacher_classes %}
+                            {% for class_row in teacher_classes %}
+                            <option value="{{ class_row.timetable_id }}" {% if selected_class and class_row.timetable_id == selected_class.timetable_id %}selected{% endif %}>
+                                {{ class_row.day_name }} | {{ class_row.start_time }} | {{ class_row.subject_name }} | Sec {{ class_row.section }}
+                            </option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="">No classes assigned</option>
+                        {% endif %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="register_from">Register From</label>
+                    <input id="register_from" name="register_from" type="date" value="{{ register_from }}">
+                </div>
+
+                <div>
+                    <label for="register_to">Register To</label>
+                    <input id="register_to" name="register_to" type="date" value="{{ register_to }}">
+                </div>
+
+                <div>
+                    <label>&nbsp;</label>
+                    <button type="submit"><i class="fas fa-sliders"></i> Load Workspace</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Mapped Classes</div>
+                <div class="stat-value">{{ teacher_classes|length }}</div>
+                <div class="stat-note">Weekly classes assigned to this teacher profile.</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Today</div>
+                <div class="stat-value">{{ today_classes|length }}</div>
+                <div class="stat-note">Classes scheduled for the current weekday.</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Average Attendance</div>
+                <div class="stat-value">{{ average_attendance }}%</div>
+                <div class="stat-note">Class-wise attendance average for the active subject.</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Engagement Score</div>
+                <div class="stat-value">{{ average_engagement }}%</div>
+                <div class="stat-note">Combined attendance, participation, and attention signal.</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">At-Risk Students</div>
+                <div class="stat-value">{{ focus_predictions|length }}</div>
+                <div class="stat-note">{{ recent_prediction_count }} saved prediction snapshots in the model table.</div>
+            </div>
+        </section>
+
+        <section class="schedule-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">My Weekly Timetable</div>
+                        <p class="panel-copy">
+                            Separate timetable for this teacher account. Only assigned periods appear here,
+                            and the active class is highlighted so period changes stay easy to review.
+                        </p>
+                    </div>
+                    <span class="tag"><i class="fas fa-calendar-days"></i> {{ teacher_classes|length }} periods</span>
+                </div>
+
+                {% if teacher_classes and period_slots %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                {% for slot in period_slots %}
+                                <th>P{{ slot.period_no }}<br>{{ slot.start_time }} - {{ slot.end_time }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in days %}
+                            <tr>
+                                <th>{{ day }}</th>
+                                {% set day_slots = slots_by_day.get(day, {}) %}
+                                {% for period_slot in period_slots %}
+                                <td>
+                                    {% set slot = day_slots.get(period_slot.period_no) %}
+                                    {% set row = teacher_timetable_grid.get(day, {}).get(slot.slot_id) if slot else none %}
+                                    {% if row %}
+                                    <div class="entry-card{% if selected_class and row.timetable_id == selected_class.timetable_id %} active{% endif %}">
+                                        <strong>{{ row.subject_name }}</strong>
+                                        <div class="muted small">Semester {{ row.semester }} | Section {{ row.section }}</div>
+                                        <div class="muted small">{{ row.room_name }}</div>
+                                        <div class="meta-row">
+                                            <span class="tag">{{ row.type }}</span>
+                                            {% if selected_class and row.timetable_id == selected_class.timetable_id %}
+                                            <span class="tag"><i class="fas fa-check"></i> Active</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="empty-cell">Free</div>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty">No timetable periods are assigned to this teacher yet.</div>
+                {% endif %}
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Generate Or Adjust Periods</div>
+                        <p class="panel-copy">
+                            Teachers can add more periods for their own timetable and move selected classes when needed.
+                            Student attendance stays read-only on the student side.
+                        </p>
+                    </div>
+                </div>
+
+                {% if teacher %}
+                <div class="mini-card" style="margin-bottom: 16px;">
+                    <h3>Generate New Timetable Period</h3>
+                    <p>Add a class to this teacher timetable. Clash checks still protect rooms, teacher slots, and section slots.</p>
+                </div>
+
+                <form method="POST" action="/teacher/timetable/add">
+                    <input type="hidden" name="teacher_id" value="{{ teacher.teacher_id }}">
+                    <div class="form-grid">
+                        <div class="span-2">
+                            <label for="new_subject_id">Subject</label>
+                            <select id="new_subject_id" name="subject_id" required>
+                                {% for subject in subject_options %}
+                                <option value="{{ subject.subject_id }}">
+                                    {{ subject.subject_code }} - {{ subject.subject_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="new_semester">Semester</label>
+                            <input id="new_semester" name="semester" type="number" min="1" max="8" value="{{ selected_class.semester if selected_class else 4 }}" required>
+                        </div>
+                        <div>
+                            <label for="new_section">Section</label>
+                            <input id="new_section" name="section" value="{{ selected_class.section if selected_class else 'A' }}" required>
+                        </div>
+                        <div class="span-2">
+                            <label for="new_slot_id">Period</label>
+                            <select id="new_slot_id" name="slot_id" required>
+                                {% for slot in slots %}
+                                <option value="{{ slot.slot_id }}">
+                                    {{ slot.day_name }} | Period {{ slot.period_no }} | {{ slot.start_time }} - {{ slot.end_time }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="new_room_id">Room</label>
+                            <select id="new_room_id" name="room_id" required>
+                                {% for room in classrooms %}
+                                <option value="{{ room.room_id }}">
+                                    {{ room.room_name }}{% if room.room_type %} ({{ room.room_type }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="new_academic_year">Academic Year</label>
+                            <input id="new_academic_year" name="academic_year" value="{{ selected_class.academic_year if selected_class else default_academic_year }}" required>
+                        </div>
+                        <div class="span-4">
+                            <button type="submit"><i class="fas fa-calendar-plus"></i> Generate Timetable Period</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="editor-note" style="margin-bottom: 18px;">
+                    New periods are created only for this teacher account. Students will see the class in their timetable
+                    when their semester and section match the generated period.
+                </div>
+                {% endif %}
+
+                {% if selected_class %}
+                <div class="mini-card" style="margin-bottom: 16px;">
+                    <h3>Adjust Selected Period</h3>
+                    <p>Move the active class to a different period or room.</p>
+                </div>
+
+                <div class="mini-card" style="margin-bottom: 16px;">
+                    <h3>{{ selected_class.subject_name }}</h3>
+                    <p>
+                        Current slot: {{ selected_class.day_name }} | Period {{ selected_class.period_no }} |
+                        {{ selected_class.start_time }} - {{ selected_class.end_time }}
+                    </p>
+                    <div class="meta-row">
+                        <span class="tag">{{ selected_class.room_name }}</span>
+                        <span class="tag">Semester {{ selected_class.semester }}</span>
+                        <span class="tag">Section {{ selected_class.section }}</span>
+                    </div>
+                </div>
+
+                <form method="POST" action="/teacher/timetable/update">
+                    <input type="hidden" name="teacher_id" value="{{ teacher.teacher_id if teacher else '' }}">
+                    <input type="hidden" name="timetable_id" value="{{ selected_class.timetable_id }}">
+                    <div class="form-grid">
+                        <div class="span-2">
+                            <label for="slot_id">New Period</label>
+                            <select id="slot_id" name="slot_id" required>
+                                {% for slot in slots %}
+                                <option value="{{ slot.slot_id }}" {% if slot.slot_id == selected_class.slot_id %}selected{% endif %}>
+                                    {{ slot.day_name }} | Period {{ slot.period_no }} | {{ slot.start_time }} - {{ slot.end_time }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="span-2">
+                            <label for="room_id">Room</label>
+                            <select id="room_id" name="room_id" required>
+                                {% for room in classrooms %}
+                                <option value="{{ room.room_id }}" {% if room.room_id == selected_class.room_id %}selected{% endif %}>
+                                    {{ room.room_name }}{% if room.room_type %} ({{ room.room_type }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="span-4">
+                            <button type="submit"><i class="fas fa-pen-to-square"></i> Save Timetable Change</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="editor-note">
+                    The update keeps the same teacher, class, and subject mapping. Existing clash checks still stop
+                    duplicate class slots, teacher overlaps, and room conflicts before anything is saved.
+                </div>
+
+                <div class="mini-card" style="margin-top: 16px;">
+                    <h3>Student Attendance Access</h3>
+                    <p>
+                        Students can view their timetable and attendance history, but they cannot mark or edit attendance
+                        from the student portal. Attendance changes remain teacher or admin actions only.
+                    </p>
+                </div>
+                {% else %}
+                <div class="empty">
+                    Select a class from the workspace filters to change its period or room.
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="hero-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Class Intelligence Summary</div>
+                        <p class="panel-copy">
+                            {% if selected_class %}
+                                {{ selected_class.subject_name }} for Semester {{ selected_class.semester }}, Section {{ selected_class.section }},
+                                {{ selected_class.day_name }} {{ selected_class.start_time }} - {{ selected_class.end_time }} in {{ selected_class.room_name }}.
+                                Attendance threshold is {{ selected_class.attendance_threshold }}%.
+                            {% else %}
+                                Pick a class to activate predictions, digital register, bulk attendance, and lesson tracking.
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if selected_class %}
+                    <span class="tag"><i class="fas fa-layer-group"></i> {{ session_count }} recorded sessions</span>
+                    {% endif %}
+                </div>
+
+                {% if selected_class %}
+                <div class="button-row">
+                    <form method="POST" action="/teacher/predictions/refresh">
+                        <input type="hidden" name="teacher_id" value="{{ teacher.teacher_id if teacher else '' }}">
+                        <input type="hidden" name="timetable_id" value="{{ selected_class.timetable_id }}">
+                        <button type="submit"><i class="fas fa-wand-magic-sparkles"></i> Refresh AI Prediction Model</button>
+                    </form>
+                    <form method="POST" action="/teacher/reminders/generate">
+                        <input type="hidden" name="teacher_id" value="{{ teacher.teacher_id if teacher else '' }}">
+                        <button class="button-muted" type="submit"><i class="fas fa-bell"></i> Queue Smart Reminders</button>
+                    </form>
+                </div>
+
+                <div class="top-summary">
+                    <div class="mini-card">
+                        <h3>Next Class Reminder</h3>
+                        {% if next_class %}
+                        <p>
+                            {{ next_class.subject_name }} is the next class for this teacher on
+                            {{ next_class.day_name }} at {{ next_class.start_time }} in {{ next_class.room_name }}.
+                        </p>
+                        {% else %}
+                        <p>No upcoming class is currently mapped.</p>
+                        {% endif %}
+                    </div>
+                    <div class="mini-card">
+                        <h3>Location-Based Attendance</h3>
+                        <p>
+                            Bulk attendance saves IP/network verification automatically, so you can demo
+                            classroom-aware attendance capture during viva.
+                        </p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty">No class selected yet. Choose a teacher and class from the top filters.</div>
+                {% endif %}
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Today's Schedule and Alerts</div>
+                        <p class="panel-copy">Quick view of active workload, reminders, and class pressure points.</p>
+                    </div>
+                </div>
+
+                <div class="insight-grid">
+                    <div class="mini-card">
+                        <h3>Today's Classes</h3>
+                        {% if today_classes %}
+                        {% for class_row in today_classes %}
+                        <p>{{ class_row.start_time }} - {{ class_row.subject_name }} ({{ class_row.section }})</p>
+                        {% endfor %}
+                        {% else %}
+                        <p>No classes scheduled today.</p>
+                        {% endif %}
+                    </div>
+                    <div class="mini-card">
+                        <h3>Reminder Queue</h3>
+                        {% if reminders %}
+                        {% for reminder in reminders[:3] %}
+                        <p>{{ reminder.remind_at }} - {{ reminder.subject_name }}</p>
+                        {% endfor %}
+                        {% else %}
+                        <p>No reminders queued yet.</p>
+                        {% endif %}
+                    </div>
+                    <div class="mini-card">
+                        <h3>Decision Signal</h3>
+                        {% if focus_predictions %}
+                        <p>{{ focus_predictions|length }} students need follow-up before the threshold drops next week.</p>
+                        {% else %}
+                        <p>Class health is stable based on the current dataset.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="analytics-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Bulk Attendance + Engagement Capture</div>
+                        <p class="panel-copy">
+                            Mark the whole class in one shot, save participation and attention scores,
+                            and auto-calculate the engagement score for each student. The dropdowns show the saved
+                            status for the selected attendance date.
+                        </p>
+                    </div>
+                    {% if selected_class %}
+                    <span class="tag"><i class="fas fa-location-dot"></i> IP verified on submit</span>
+                    {% endif %}
+                </div>
+
+                {% if selected_class and roster_metrics %}
+                <form method="POST" action="/teacher/attendance/bulk">
+                    <input type="hidden" name="teacher_id" value="{{ teacher.teacher_id if teacher else '' }}">
+                    <input type="hidden" name="timetable_id" value="{{ selected_class.timetable_id }}">
+                    <div class="form-grid" style="margin-bottom: 16px;">
+                        <div>
+                            <label for="attendance_date">Attendance Date</label>
+                            <input id="attendance_date" type="date" name="attendance_date" value="{{ register_to or register_from }}">
+                        </div>
+                        <div class="span-2">
+                            <label>Active Class</label>
+                            <input value="{{ selected_class.subject_name }} | {{ selected_class.day_name }} {{ selected_class.start_time }} | Section {{ selected_class.section }}" disabled>
+                        </div>
+                        <div>
+                            <label>&nbsp;</label>
+                            <button type="submit"><i class="fas fa-save"></i> Save Bulk Attendance</button>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Attendance</th>
+                                    <th>Participation</th>
+                                    <th>Attention</th>
+                                    <th>Current %</th>
+                                    <th>Predicted %</th>
+                                    <th>Risk</th>
+                                    <th>Remark</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in roster_metrics %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ row.student_name }}</strong>
+                                        <div class="muted small">{{ row.roll_no }}</div>
+                                    </td>
+                                    <td>
+                                        <select name="status_{{ row.student_id }}">
+                                            <option value="Present" {% if row.selected_date_status != 'Absent' %}selected{% endif %}>Present</option>
+                                            <option value="Absent" {% if row.selected_date_status == 'Absent' %}selected{% endif %}>Absent</option>
+                                        </select>
+                                        <div class="muted small">
+                                            Saved: {{ row.selected_date_status }}
+                                            {% if row.last_seen_date and row.last_seen_date != (register_to or register_from) %}
+                                            | Latest: {{ row.last_status }} on {{ row.last_seen_date }}
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td><input name="participation_{{ row.student_id }}" type="number" min="0" max="100" value="{{ row.avg_participation if row.avg_participation is not none else 70 }}"></td>
+                                    <td><input name="attention_{{ row.student_id }}" type="number" min="0" max="100" value="{{ row.avg_attention if row.avg_attention is not none else 70 }}"></td>
+                                    <td>{% if row.session_count > 0 %}{{ row.current_percentage }}%{% else %}No data{% endif %}</td>
+                                    <td>{% if row.session_count > 0 %}{{ row.predicted_percentage }}%{% else %}No data{% endif %}</td>
+                                    <td>
+                                        {% if row.session_count > 0 %}
+                                        <span class="risk-badge risk-{{ row.risk_level }}">{{ row.risk_level|title }}</span>
+                                        {% else %}
+                                        <span class="tag">No data</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><input name="remark_{{ row.student_id }}" placeholder="Short note"></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+                {% else %}
+                <div class="empty">Bulk attendance becomes available as soon as a class roster is available for the teacher.</div>
+                {% endif %}
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">AI Attendance Prediction</div>
+                        <p class="panel-copy">
+                            Forecast students who may fall below the required threshold during the coming week.
+                        </p>
+                    </div>
+                    {% if focus_predictions %}
+                    <span class="tag"><i class="fas fa-triangle-exclamation"></i> {{ focus_predictions|length }} watchlist</span>
+                    {% endif %}
+                </div>
+
+                {% if focus_predictions %}
+                <div class="prediction-list">
+                    {% for row in focus_predictions %}
+                    <article class="prediction-item">
+                        <div class="panel-header" style="margin-bottom: 10px;">
+                            <div>
+                                <h3>{{ row.student_name }}</h3>
+                                <p>{{ row.roll_no }}</p>
+                            </div>
+                            <span class="risk-badge risk-{{ row.risk_level }}">{{ row.risk_level|title }}</span>
+                        </div>
+                        <p>{{ row.student_name.split()[0] }} is likely to move to <strong>{{ row.predicted_percentage }}%</strong> if the current pattern continues next week.</p>
+                        <div class="meta-row">
+                            <span class="tag">Current {{ row.current_percentage }}%</span>
+                            {% if row.avg_engagement is not none %}
+                            <span class="tag">Engagement {{ row.avg_engagement }}%</span>
+                            {% endif %}
+                        </div>
+                        <p style="margin-top: 10px;">{{ row.recommendation }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty">No medium or high-risk prediction is active for the selected class.</div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="ops-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Smart Recommendation System</div>
+                        <p class="panel-copy">
+                            Decision-support suggestions generated from attendance, engagement, lesson coverage, and timetable load.
+                        </p>
+                    </div>
+                </div>
+
+                {% if recommendations %}
+                <div class="recommendation-list">
+                    {% for item in recommendations %}
+                    <article class="recommendation-item">
+                        <div class="panel-header" style="margin-bottom: 10px;">
+                            <div>
+                                <h3>{{ item.title }}</h3>
+                                <p>{{ item.type|replace('_', ' ')|title }}</p>
+                            </div>
+                            <span class="priority-badge priority-{{ item.priority }}">{{ item.priority|title }}</span>
+                        </div>
+                        <p>{{ item.details }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty">Recommendations will appear once the teacher and class context is loaded.</div>
+                {% endif %}
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Lesson Tracking</div>
+                        <p class="panel-copy">
+                            Record the topic covered, learning outcome, homework, and syllabus progress after every class.
+                        </p>
+                    </div>
+                </div>
+
+                {% if selected_class %}
+                <form method="POST" action="/teacher/lesson">
+                    <input type="hidden" name="teacher_id" value="{{ teacher.teacher_id if teacher else '' }}">
+                    <input type="hidden" name="timetable_id" value="{{ selected_class.timetable_id }}">
+                    <div class="form-grid">
+                        <div>
+                            <label for="lesson_date">Lesson Date</label>
+                            <input id="lesson_date" name="lesson_date" type="date" value="{{ register_to or register_from }}">
+                        </div>
+                        <div>
+                            <label for="unit_name">Unit Name</label>
+                            <input id="unit_name" name="unit_name" placeholder="Unit 3">
+                        </div>
+                        <div class="span-2">
+                            <label for="topic_name">Topic Covered</label>
+                            <input id="topic_name" name="topic_name" placeholder="Decision Trees and Entropy" required>
+                        </div>
+                        <div class="span-2">
+                            <label for="learning_outcome">Learning Outcome</label>
+                            <input id="learning_outcome" name="learning_outcome" placeholder="Students can build a small classification tree">
+                        </div>
+                        <div>
+                            <label for="resource_link">Resource Link</label>
+                            <input id="resource_link" name="resource_link" placeholder="Slides or LMS URL">
+                        </div>
+                        <div>
+                            <label for="syllabus_progress">Syllabus Progress %</label>
+                            <input id="syllabus_progress" name="syllabus_progress" type="number" min="0" max="100" value="50">
+                        </div>
+                        <div class="span-4">
+                            <label for="homework">Homework / Follow-up</label>
+                            <textarea id="homework" name="homework" placeholder="Revision set, lab task, or assignment"></textarea>
+                        </div>
+                        <div class="span-4">
+                            <button type="submit"><i class="fas fa-book"></i> Save Lesson Tracker</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div style="margin-top: 18px;">
+                    <div class="panel-title" style="font-size: 18px;">Recent Lesson Entries</div>
+                    {% if recent_lessons %}
+                    <div class="timeline-list" style="margin-top: 12px;">
+                        {% for lesson in recent_lessons %}
+                        <article class="timeline-item">
+                            <h3>{{ lesson.topic_name }}</h3>
+                            <p>{{ lesson.lesson_date }}{% if lesson.unit_name %} | {{ lesson.unit_name }}{% endif %}</p>
+                            {% if lesson.learning_outcome %}
+                            <p>{{ lesson.learning_outcome }}</p>
+                            {% endif %}
+                            <div class="meta-row">
+                                <span class="tag">Progress {{ lesson.syllabus_progress }}%</span>
+                                {% if lesson.homework %}
+                                <span class="tag">Homework Added</span>
+                                {% endif %}
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty" style="margin-top: 12px;">No lesson history has been recorded for this class yet.</div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="empty">Lesson tracking unlocks once a teacher class is selected.</div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="ops-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Trend Analysis</div>
+                        <p class="panel-copy">
+                            Visualize attendance trend and engagement trend over recent sessions for the selected subject.
+                        </p>
+                    </div>
+                </div>
+
+                {% if attendance_trend_labels or engagement_trend_labels %}
+                <div class="chart-box">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <canvas id="engagementChart"></canvas>
+                </div>
+                {% else %}
+                <div class="empty">Trend charts will appear after attendance and engagement data is recorded.</div>
+                {% endif %}
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Auto Substitute Management</div>
+                        <p class="panel-copy">
+                            Register a teacher absence and auto-assign the first available substitute for the same slot.
+                        </p>
+                    </div>
+                </div>
+
+                {% if selected_class %}
+                <form method="POST" action="/teacher/substitute">
+                    <input type="hidden" name="teacher_id" value="{{ teacher.teacher_id if teacher else '' }}">
+                    <input type="hidden" name="timetable_id" value="{{ selected_class.timetable_id }}">
+                    <div class="form-grid">
+                        <div>
+                            <label for="absence_date">Absence Date</label>
+                            <input id="absence_date" name="absence_date" type="date" value="{{ register_to or register_from }}">
+                        </div>
+                        <div class="span-2">
+                            <label for="reason">Reason</label>
+                            <input id="reason" name="reason" placeholder="Sick leave / official duty">
+                        </div>
+                        <div>
+                            <label>&nbsp;</label>
+                            <button class="button-warn" type="submit"><i class="fas fa-users"></i> Auto Assign Substitute</button>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+
+                <div style="margin-top: 18px;">
+                    <div class="panel-title" style="font-size: 18px;">Substitute History</div>
+                    {% if substitutions %}
+                    <div class="timeline-list" style="margin-top: 12px;">
+                        {% for item in substitutions %}
+                        <article class="timeline-item">
+                            <h3>{{ item.subject_name }}</h3>
+                            <p>{{ item.allocation_date }} | {{ item.day_name }} {{ item.start_time }} - {{ item.end_time }}</p>
+                            <p>Original: {{ item.original_teacher_name }} | Substitute: {{ item.substitute_teacher_name }}</p>
+                            {% if item.note %}
+                            <p>{{ item.note }}</p>
+                            {% endif %}
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty" style="margin-top: 12px;">No substitute allocation recorded yet.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="footer-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Digital Attendance Register</div>
+                        <p class="panel-copy">
+                            Scroll attendance by date with participation, attention, engagement score, and location verification.
+                        </p>
+                    </div>
+                </div>
+
+                {% if register_rows %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Student</th>
+                                <th>Status</th>
+                                <th>Location</th>
+                                <th>Participation</th>
+                                <th>Attention</th>
+                                <th>Engagement</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in register_rows %}
+                            <tr>
+                                <td>{{ row.attend_date }}</td>
+                                <td>
+                                    <strong>{{ row.student_name }}</strong>
+                                    <div class="muted small">{{ row.roll_no }}</div>
+                                </td>
+                                <td>{{ row.status }}</td>
+                                <td><span class="tag">{{ row.location_status }}</span></td>
+                                <td>{{ row.participation_score }}</td>
+                                <td>{{ row.attention_score }}</td>
+                                <td>{{ row.engagement_score }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty">No attendance rows fall inside the selected register date range.</div>
+                {% endif %}
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Reminder Queue and Activity Log</div>
+                        <p class="panel-copy">
+                            Review queued class reminders and the latest audit events from teacher-side actions.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="timeline-list">
+                    {% if reminders %}
+                        {% for reminder in reminders %}
+                        <article class="timeline-item">
+                            <h3>{{ reminder.subject_name }}</h3>
+                            <p>{{ reminder.remind_at }}</p>
+                            <p>{{ reminder.message }}</p>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty">No reminder is currently queued.</div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-top: 18px;">
+                    <div class="panel-title" style="font-size: 18px;">Activity Stream</div>
+                    {% if activity_logs %}
+                    <div class="activity-list" style="margin-top: 12px;">
+                        {% for log in activity_logs %}
+                        <article class="activity-item">
+                            <p><strong>{{ log.action_type|replace('_', ' ')|title }}</strong> · {{ log.entity_type }}</p>
+                            <p>{{ log.description }}</p>
+                            <p class="small muted">{{ log.created_at }}</p>
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty" style="margin-top: 12px;">No recent activity has been logged for this teacher yet.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        {% if can_manage_backup %}
+        <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Backup and Restore Center</div>
+                    <p class="panel-copy">
+                        Admin-only database safety tools with manual backup creation and one-click restore from history.
+                    </p>
+                </div>
+                <form method="POST" action="/teacher/backup/create" style="min-width: 240px;">
+                    <input type="hidden" name="teacher_id" value="{{ teacher.teacher_id if teacher else '' }}">
+                    <input type="hidden" name="timetable_id" value="{{ selected_class.timetable_id if selected_class else '' }}">
+                    <button type="submit"><i class="fas fa-database"></i> Create Backup</button>
+                </form>
+            </div>
+
+            {% if backup_history %}
+            <div class="backup-list">
+                {% for backup in backup_history %}
+                <article class="backup-item">
+                    <div class="panel-header" style="margin-bottom: 10px;">
+                        <div>
+                            <h3>{{ backup.file_name }}</h3>
+                            <p>{{ backup.created_at }}{% if backup.restored_at %} | Restored {{ backup.restored_at }}{% endif %}</p>
+                        </div>
+                        <span class="status-badge {{ 'status-good' if backup.status in ['created', 'restored'] else 'status-pending' }}">
+                            {{ backup.status }}
+                        </span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="tag">{{ backup.backup_type }}</span>
+                        <form method="POST" action="/teacher/backup/restore/{{ backup.backup_id }}" onsubmit="return confirm('Restore this backup? A safety copy of the current database will be created first.');" style="flex: 1 1 220px;">
+                            <input type="hidden" name="teacher_id" value="{{ teacher.teacher_id if teacher else '' }}">
+                            <input type="hidden" name="timetable_id" value="{{ selected_class.timetable_id if selected_class else '' }}">
+                            <button class="button-warn" type="submit"><i class="fas fa-rotate-left"></i> Restore Backup</button>
+                        </form>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty">No backup has been created yet.</div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <script>
+            const attendanceLabels = {{ attendance_trend_labels | tojson }};
+            const attendanceValues = {{ attendance_trend_values | tojson }};
+            const engagementLabels = {{ engagement_trend_labels | tojson }};
+            const engagementValues = {{ engagement_trend_values | tojson }};
+
+            if (attendanceLabels.length) {
+                new Chart(document.getElementById('attendanceChart'), {
+                    type: 'line',
+                    data: {
+                        labels: attendanceLabels,
+                        datasets: [{
+                            label: 'Attendance %',
+                            data: attendanceValues,
+                            borderColor: '#67e8f9',
+                            backgroundColor: 'rgba(103, 232, 249, 0.18)',
+                            tension: 0.35,
+                            fill: true,
+                            borderWidth: 3,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: '#e2e8f0' } } },
+                        scales: {
+                            x: { ticks: { color: '#8fa2b8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                            y: { min: 0, max: 100, ticks: { color: '#8fa2b8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                        },
+                    },
+                });
+            }
+
+            if (engagementLabels.length) {
+                new Chart(document.getElementById('engagementChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: engagementLabels,
+                        datasets: [{
+                            label: 'Engagement %',
+                            data: engagementValues,
+                            backgroundColor: 'rgba(74, 222, 128, 0.55)',
+                            borderColor: '#4ade80',
+                            borderWidth: 1.5,
+                            borderRadius: 12,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: '#e2e8f0' } } },
+                        scales: {
+                            x: { ticks: { color: '#8fa2b8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                            y: { min: 0, max: 100, ticks: { color: '#8fa2b8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                        },
+                    },
+                });
+            }
+        </script>
+    </body>
+</html>

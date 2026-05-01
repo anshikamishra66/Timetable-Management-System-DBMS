@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teachers | Timetable Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background: #09121f;
+            color: #e5eef8;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0f1b2d, #0b1523);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px 16px;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 700;
+            color: #7dd3fc;
+            margin-bottom: 24px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #9fb3c8;
+            text-decoration: none;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(125, 211, 252, 0.12);
+            color: #e5eef8;
+        }
+
+        .main {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            padding: 32px;
+        }
+
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 16px;
+        }
+
+        .hero h1 {
+            font-size: 32px;
+            margin-bottom: 6px;
+        }
+
+        .hero p {
+            color: #93a9c2;
+        }
+
+        .panel {
+            background: rgba(12, 24, 40, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+            margin-bottom: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #9fb3c8;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #0a1728;
+            color: #e5eef8;
+        }
+
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 14px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        th {
+            color: #7dd3fc;
+            font-size: 13px;
+        }
+
+        td {
+            color: #d8e6f5;
+            font-size: 14px;
+        }
+
+        .delete-link {
+            color: #fda4af;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(14, 165, 233, 0.12);
+            color: #7dd3fc;
+            font-size: 12px;
+        }
+
+        @media (max-width: 900px) {
+            body { display: block; }
+            .sidebar {
+                position: static;
+                width: 100%;
+                min-height: auto;
+            }
+            .main {
+                margin-left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            .hero {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .table-wrap {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="brand"><i class="fas fa-calendar-alt"></i> TMS</div>
+        <a href="/dashboard" class="nav-link"><i class="fas fa-house"></i> Dashboard</a>
+        <a href="/timetable" class="nav-link"><i class="fas fa-table"></i> Timetable</a>
+        <a href="/teachers" class="nav-link active"><i class="fas fa-user-tie"></i> Teachers</a>
+        <a href="/students" class="nav-link"><i class="fas fa-user-graduate"></i> Students</a>
+        <a href="/attendance" class="nav-link"><i class="fas fa-clipboard-check"></i> Attendance</a>
+        <a href="/logout" class="nav-link"><i class="fas fa-right-from-bracket"></i> Logout</a>
+    </aside>
+
+    <main class="main">
+        <div class="hero">
+            <div>
+                <h1>Teachers</h1>
+                <p>Manage faculty details, contacts, and department mapping.</p>
+            </div>
+            <span class="chip">{{ teachers|length }} faculty members</span>
+        </div>
+
+        <section class="panel">
+            <h2 style="margin-bottom: 16px;">Add Teacher</h2>
+            <form method="POST" action="/teachers/add" class="form-grid">
+                <div>
+                    <label for="teacher_name">Teacher Name</label>
+                    <input id="teacher_name" name="teacher_name" required>
+                </div>
+                <div>
+                    <label for="dept_id">Department</label>
+                    <select id="dept_id" name="dept_id" required>
+                        {% for dept in departments %}
+                        <option value="{{ dept.dept_id }}">{{ dept.dept_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" required>
+                </div>
+                <div>
+                    <label for="contact_no">Contact Number</label>
+                    <input id="contact_no" name="contact_no" required>
+                </div>
+                <div>
+                    <button type="submit"><i class="fas fa-plus"></i> Add Teacher</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2 style="margin-bottom: 16px;">Faculty Directory</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Email</th>
+                            <th>Contact</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for teacher in teachers %}
+                        <tr>
+                            <td>{{ teacher.teacher_id }}</td>
+                            <td>{{ teacher.teacher_name }}</td>
+                            <td>{{ teacher.dept_name }}</td>
+                            <td>{{ teacher.email }}</td>
+                            <td>{{ teacher.contact_no }}</td>
+                            <td><a class="delete-link" href="/teachers/delete/{{ teacher.teacher_id }}">Delete</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

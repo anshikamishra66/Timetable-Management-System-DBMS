@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI&DS 4th Sem Timetable Generator</title>
+    <title>{{ selected_department_name }} Semester {{ selected_semester }} Timetable</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 30%),
+                radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.14), transparent 35%),
+                linear-gradient(180deg, #07131f, #0f172a);
+            color: #f8fafc;
+            min-height: 100vh;
+            padding: 28px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .header p {
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .links a {
+            color: #86efac;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(34, 197, 94, 0.12);
+            color: #bbf7d0;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 22px;
+        }
+
+        .panel {
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+        }
+
+        .panel h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .panel-intro {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        label {
+            display: block;
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 13px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #08111d;
+            color: #f8fafc;
+        }
+
+        .button {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #22c55e, #0ea5e9);
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .filter-form .wide {
+            grid-column: span 2;
+        }
+
+        .filter-btn {
+            align-self: end;
+        }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .summary-card {
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .summary-card .label {
+            color: #64748b;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .summary-card .value {
+            margin-top: 8px;
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.15;
+            word-break: break-word;
+        }
+
+        .table-wrap { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 980px;
+        }
+
+        th, td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 14px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: #67e8f9;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        td {
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+
+        .slot-cell {
+            min-width: 170px;
+        }
+
+        .entry-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px;
+        }
+
+        .entry-card strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #f8fafc;
+        }
+
+        .meta {
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .type-pill {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: rgba(34, 197, 94, 0.14);
+            color: #bbf7d0;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .delete-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #fda4af;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .empty-cell {
+            color: #475569;
+            font-size: 13px;
+        }
+
+        @media (max-width: 1100px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            .filter-form {
+                grid-template-columns: 1fr 1fr;
+            }
+            .summary-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            body { padding: 18px; }
+            .filter-form {
+                grid-template-columns: 1fr;
+            }
+            .filter-form .wide {
+                grid-column: span 1;
+            }
+        }
+
+        .flash-message {
+            padding: 12px 14px;
+            border-radius: 14px;
+            margin-bottom: 10px;
+        }
+
+        .flash-message.error {
+            background: rgba(239, 68, 68, 0.14);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            color: #fecaca;
+        }
+
+        .flash-message.success {
+            background: rgba(34, 197, 94, 0.14);
+            border: 1px solid rgba(74, 222, 128, 0.28);
+            color: #dcfce7;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>{{ selected_department_name }} Semester {{ selected_semester }} Timetable</h1>
+            <p>Build, update, and manage the weekly timetable for the selected department, semester, and section.</p>
+            <span class="hero-badge">Current view: Semester {{ selected_semester }}, Section {{ selected_section }}, AY {{ selected_academic_year }}</span>
+        </div>
+        <div class="links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/teachers">Teachers</a>
+            <a href="/students">Students</a>
+            <a href="/attendance">Attendance</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="layout">
+        <aside class="panel">
+            <h2>Generate / Update Slot</h2>
+            <p class="panel-intro">
+                Pick a department, semester, section, time slot, subject, teacher, and room.
+                If the slot already exists, the generator updates it automatically.
+            </p>
+
+            <form method="POST" action="/timetable" class="form-grid">
+                <div>
+                    <label for="dept_id">Department</label>
+                    <select id="dept_id" name="dept_id" required>
+                        {% for dept in departments %}
+                        <option value="{{ dept.dept_id }}" {% if dept.dept_id == selected_dept_id %}selected{% endif %}>
+                            {{ dept.dept_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="semester">Semester</label>
+                    <select id="semester" name="semester" required>
+                        {% for sem in range(1, 9) %}
+                        <option value="{{ sem }}" {% if sem == selected_semester %}selected{% endif %}>Semester {{ sem }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="section">Section</label>
+                    <input id="section" name="section" value="{{ selected_section }}" required>
+                </div>
+
+                <div>
+                    <label for="academic_year">Academic Year</label>
+                    <input id="academic_year" name="academic_year" value="{{ selected_academic_year }}" required>
+                </div>
+
+                <div>
+                    <label for="slot_id">Time Slot</label>
+                    <select id="slot_id" name="slot_id" required>
+                        {% for slot in slots %}
+                        <option value="{{ slot.slot_id }}">
+                            {{ slot.day_name }} | {{ slot.start_time }} - {{ slot.end_time }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="subject_id">Subject</label>
+                    <select id="subject_id" name="subject_id" required>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.subject_id }}">{{ subject.subject_name }} ({{ subject.subject_code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="teacher_id">Teacher</label>
+                    <select id="teacher_id" name="teacher_id" required>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.teacher_id }}">{{ teacher.teacher_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="room_id">Room</label>
+                    <select id="room_id" name="room_id" required>
+                        {% for room in classrooms %}
+                        <option value="{{ room.room_id }}">{{ room.room_name }} ({{ room.room_type }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit" class="button"><i class="fas fa-wand-magic-sparkles"></i> Generate Timetable Slot</button>
+            </form>
+        </aside>
+
+        <section class="panel">
+            <h2>Weekly Timetable</h2>
+            <p class="panel-intro">
+                Use the filters to focus on one timetable for the selected department, semester, section, and academic year.
+            </p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div style="margin-bottom:16px;">
+                        {% for category, message in messages %}
+                        <div class="flash-message {% if category == 'error' %}error{% else %}success{% endif %}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="GET" action="/timetable" class="filter-form">
+                <div>
+                    <label for="filter_dept">Department</label>
+                    <select id="filter_dept" name="dept_id">
+                        {% for dept in departments %}
+                        <option value="{{ dept.dept_id }}" {% if dept.dept_id == selected_dept_id %}selected{% endif %}>
+                            {{ dept.dept_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="filter_semester">Semester</label>
+                    <select id="filter_semester" name="semester">
+                        {% for sem in range(1, 9) %}
+                        <option value="{{ sem }}" {% if sem == selected_semester %}selected{% endif %}>Semester {{ sem }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="filter_section">Section</label>
+                    <input id="filter_section" name="section" value="{{ selected_section }}">
+                </div>
+                <div class="wide">
+                    <label for="filter_year">Academic Year</label>
+                    <input id="filter_year" name="academic_year" value="{{ selected_academic_year }}">
+                </div>
+                <button type="submit" class="button filter-btn">Load Timetable</button>
+            </form>
+
+            <div class="summary-row">
+                <div class="summary-card">
+                    <div class="label">Department</div>
+                    <div class="value">{{ selected_department_name }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Semester / Section</div>
+                    <div class="value">{{ selected_semester }} / {{ selected_section }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Scheduled Slots</div>
+                    <div class="value">{{ timetable|length }}</div>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            {% for slot in period_slots %}
+                            <th>{{ slot.start_time }} - {{ slot.end_time }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for day in days %}
+                        <tr>
+                            <th>{{ day }}</th>
+                            {% set day_slots = slots_by_day.get(day, {}) %}
+                            {% for period_slot in period_slots %}
+                            <td class="slot-cell">
+                                {% set slot = day_slots.get(period_slot.period_no) %}
+                                {% set row = timetable_grid.get(day, {}).get(slot.slot_id) if slot else none %}
+                                {% if row %}
+                                <div class="entry-card">
+                                    <strong>{{ row.subject_name }}</strong>
+                                    <div class="meta">{{ row.teacher_name }}</div>
+                                    <div class="meta">{{ row.room_name }}</div>
+                                    <div class="meta">AY {{ row.academic_year }}</div>
+                                    <span class="type-pill">{{ row.type }}</span>
+                                    <a class="delete-link" href="/timetable/delete/{{ row.timetable_id }}">Delete</a>
+                                </div>
+                                {% else %}
+                                <div class="empty-cell">No class</div>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

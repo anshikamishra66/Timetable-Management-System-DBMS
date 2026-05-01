@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(180deg, #081018, #0f172a);
+            color: #f8fafc;
+            min-height: 100vh;
+            padding: 28px;
+        }
+        .header, .stats { display: grid; gap: 16px; }
+        .header { grid-template-columns: 1fr auto; align-items: start; margin-bottom: 24px; }
+        .header a { color: #7dd3fc; text-decoration: none; margin-left: 14px; font-weight: 700; }
+        .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 20px; }
+        .card {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 22px;
+        }
+        .label { color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+        .value { margin-top: 8px; font-size: 32px; font-weight: 800; }
+        .layout { display: grid; grid-template-columns: 340px 1fr; gap: 20px; }
+        .info-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .info-value { color: #e2e8f0; margin-top: 6px; line-height: 1.5; }
+        table { width: 100%; border-collapse: collapse; min-width: 760px; }
+        th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        th { color: #67e8f9; font-size: 13px; text-transform: uppercase; }
+        .table-wrap { overflow-x: auto; }
+        .pill { display: inline-block; padding: 5px 9px; border-radius: 999px; background: rgba(34, 197, 94, 0.14); color: #bbf7d0; font-size: 11px; font-weight: 700; }
+        .cta { display: inline-flex; margin-top: 18px; padding: 11px 14px; border-radius: 12px; text-decoration: none; background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; font-weight: 700; }
+        @media (max-width: 980px) { .layout, .stats, .header { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>{{ student.student_name }}</h1>
+            <p style="margin-top:6px; color:#94a3b8;">Welcome back. Your USN-linked student portal, timetable, and attendance are ready.</p>
+        </div>
+        <div>
+            <a href="/attendance">Attendance</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="card">
+            <div class="label">Total Classes</div>
+            <div class="value">{{ total_classes }}</div>
+        </div>
+        <div class="card">
+            <div class="label">Present</div>
+            <div class="value">{{ present_classes }}</div>
+        </div>
+        <div class="card">
+            <div class="label">Attendance</div>
+            <div class="value">{{ percentage }}%</div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <aside class="card">
+            <h2>Profile</h2>
+            <div class="info-row">
+                <div class="label">USN</div>
+                <div class="info-value">{{ student.roll_no }}</div>
+            </div>
+            <div class="info-row">
+                <div class="label">Portal Access</div>
+                <div class="info-value">This portal is locked to your USN login.</div>
+            </div>
+            <div class="info-row">
+                <div class="label">Department</div>
+                <div class="info-value">{{ student.dept_name }}</div>
+            </div>
+            <div class="info-row">
+                <div class="label">Semester / Section</div>
+                <div class="info-value">Semester {{ student.semester }} / Section {{ student.section }}</div>
+            </div>
+            <div class="info-row">
+                <div class="label">Email</div>
+                <div class="info-value">{{ student.email }}</div>
+            </div>
+            <a class="cta" href="/attendance"><i class="fas fa-clipboard-check" style="margin-right:8px;"></i> View Attendance</a>
+        </aside>
+
+        <section class="card">
+            <h2 style="margin-bottom: 14px;">My Timetable</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Subject</th>
+                            <th>Teacher</th>
+                            <th>Email</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in timetable %}
+                        <tr>
+                            <td>{{ row.day_name }}</td>
+                            <td>{{ row.start_time }} - {{ row.end_time }}</td>
+                            <td>{{ row.subject_code }} - {{ row.subject_name }}</td>
+                            <td>{{ row.teacher_name }}</td>
+                            <td>{{ row.teacher_email }}</td>
+                            <td><span class="pill">{{ row.type }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
